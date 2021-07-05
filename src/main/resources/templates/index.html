@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            overflow-x: hidden;
+        }
+        #filterBtn{
+            background-color: #279bbd;
+            color: azure;
+            border-radius: 20px;
+            width: 6%;
+        }
+        .filter-album-input .alert-label{
+            color:red;
+        }
+        .filter-album-input{
+            position: relative;
+            left: 42%;
+            margin-bottom: 56px;
+        }
+        .header{
+            position: relative;
+            left: 42%;
+            width: fit-content;
+            padding: 2%;
+            font-family: monospace;
+        }
+        .images-container{
+            display: flex;
+            flex-wrap: wrap;
+            font-family: monospace;
+            left: 10%;
+            position: relative;
+        }
+        .images-container .image-and-desc{
+                position: relative;
+                width: 30%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 260px;
+        }
+
+        .images-container .image-and-desc .img{
+            width: 35%;
+            position: relative;
+            border: 8px solid;
+        }
+
+        .images-container .image-and-desc .label{
+            width: fit-content;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="header">Images Gallery</h2>
+    <div class="filter-album-input">
+        <input type="input" id="album-id-input" placeholder="filter by album id (blank will return all images)">
+        <button id="filterBtn">filter</button>
+        <br/>
+        <label class="alert-label" id="alert"></label>
+    </div>
+    <div class="images-container" id="container">
+    </div>
+</body>
+<script th:inline="javascript">
+/*<![CDATA[*/
+
+
+    window.addEventListener('load',()=>{
+        fetch("http://localhost:8080/images").then(res=>res.json()).then(data=>{
+            let container = document.getElementById("container");
+            container.innerHTML = "";
+            for(let img of data){
+                createImageDiv(img);
+            }
+        })
+    });
+
+
+    let btn = document.getElementById("filterBtn");
+    btn.onclick=()=>{
+        let val = document.getElementById("album-id-input").value;
+        if(val===""){
+             document.getElementById("alert").innerText="";
+             fetch("http://localhost:8080/images").then(res=>res.json()).then(data=>{
+                let container = document.getElementById("container");
+                container.innerHTML = "";
+                for(let img of data){
+                    createImageDiv(img);
+                }
+            })
+        }
+        else if(isNaN(val)){
+             document.getElementById("alert").innerText="Album id must be a number";
+        }
+        else{
+            container.innerHTML = "";
+            document.getElementById("alert").innerText="";
+            fetch("http://localhost:8080/images/album?albumId="+val).then(res=>res.json()).then(data=>{
+                for(let img of data){
+                    createImageDiv(img);
+                }
+            })
+        }
+    };
+
+    function downloadImage(img){
+        fetch("http://localhost:8080/images/download/"+img.id).then(res=>res.blob()).then(blob=>{
+            let url = window.URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = img.title;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+
+    }
+
+
+
+    function createImageDiv(image){
+        let imageAndDesc = document.createElement("div");
+        imageAndDesc.classList.add("image-and-desc");
+        let img = document.createElement("img");
+        img.src = image.thumbnailUrl;
+        img.classList.add("img");
+        imageAndDesc.appendChild(img);
+        imageAndDesc.appendChild(document.createElement("br"));
+        let downloadBtn = document.createElement("button");
+        downloadBtn.innerText = "download";
+        downloadBtn.onclick = ()=>{downloadImage(image)}
+        imageAndDesc.appendChild(downloadBtn);
+        let label = document.createElement("label");
+        label.classList.add("label");
+        label.innerText = image.title;
+        imageAndDesc.appendChild(label);
+
+
+        let container = document.getElementById("container");
+        container.appendChild(imageAndDesc);
+    }
+
+/*]]>*/
+</script>
+</html>
