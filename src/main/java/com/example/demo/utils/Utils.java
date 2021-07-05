@@ -19,6 +19,7 @@ public class Utils {
         return response;
     }
 
+    //delete folder and its content
     public static boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
